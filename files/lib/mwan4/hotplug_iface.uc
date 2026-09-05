@@ -14,8 +14,8 @@ let INTERFACE = getenv('INTERFACE');
 let DEVICE = getenv('DEVICE');
 let MWAN4_STARTUP = getenv('MWAN4_STARTUP');
 
-// Check if mwan4 has been set up (dynamic nft file exists)
-if (!m.nft_file('exists', 'dynamic')) {
+// Check if mwan4 has been set up (dynamic nft file exists, or we run from init)
+if (!m.nft_file('exists', 'dynamic') && MWAN4_STARTUP != 'init') {
 	m.LOG('warn', 'hotplug called on', INTERFACE, 'before mwan4 has been set up');
 	exit(0);
 }
