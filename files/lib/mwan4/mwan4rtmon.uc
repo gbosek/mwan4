@@ -17,6 +17,41 @@ if (family == 'ipv6' && m.no_ipv6) {
 
 let ip = (family == 'ipv4') ? 'ip -4' : 'ip -6';
 
+// ── Signal number resolution and cleanup ─────────────────────────────
+
+function signum(name) {
+	let sp = popen('kill -l ' + name, 'r');
+	if (!sp) return null;
+	let s = trim(sp.read('all') || '');
+	sp.close();
+	return int(s) || null;
+}
+
+let mon_pid = null;
+let mon = null;
+
+function cleanup() {
+	if (mon_pid && mon_pid > 0) {
+		system(sprintf('kill -TERM %d 2>/dev/null', mon_pid));
+		system(sprintf('kill -KILL %d 2>/dev/null', mon_pid));
+	}
+	if (mon) {
+		mon.close();
+		mon = null;
+	}
+	exit(0);
+}
+
+let sig_term = signum('TERM') || 15;
+let sig_int = signum('INT') || 2;
+let sig_hup = signum('HUP') || 1;
+let sig_quit = signum('QUIT') || 3;
+
+if (sig_term) signal(sig_term, cleanup);
+if (sig_int) signal(sig_int, cleanup);
+if (sig_hup) signal(sig_hup, cleanup);
+if (sig_quit) signal(sig_quit, cleanup);
+
 // ── Debounce state for connected-set rebuilds ──────────────────────
 let last_connected_rebuild = 0;
 let connected_rebuild_pending = false;
@@ -191,10 +226,25 @@ else
 add_all_routes();
 
 // Start monitoring route changes
-let mon = popen(sprintf('%s monitor route', ip), 'r');
+mon = popen(sprintf("echo $$; exec %s monitor route", ip), 'r');
 if (!mon) {
 	m.LOG('err', 'Failed to start ip monitor route');
 	exit(1);
+}
+
+let pid_line = mon.read('line');
+if (pid_line != null) {
+	let trimmed = trim(pid_line);
+	if (match(trimmed, /^[0-9]+$/)) {
+		mon_pid = int(trimmed);
+	} else {
+		let line = rtrim('' + pid_line, '\n');
+		if (length(line) && index(line, 'table') < 0) {
+			flush_pending_rebuild();
+			m.LOG('debug', 'handling route update', family, line);
+			handle_route(line);
+		}
+	}
 }
 
 let line;
@@ -206,4 +256,4 @@ while ((line = mon.read('line')) != null) {
 	handle_route(line);
 }
 
-mon.close();
+cleanup();
