@@ -3,8 +3,7 @@
 // Copyright 2026 MOSSDeF, Stan Grishin (stangri@melmac.ca).
 // Based on original mwan3 by Florian Eckert <fe@dev.tdt.de>
 
-push(REQUIRE_SEARCH_PATH, '/lib/mwan4/*.uc');
-import m from 'mwan4';
+import m from '/lib/mwan4/mwan4.uc';
 
 m.set_scriptname('rpcd-mwan4');
 m.init();
