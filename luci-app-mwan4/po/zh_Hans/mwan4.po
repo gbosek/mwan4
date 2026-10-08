@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: luci-app-mwan4 0.1.0\\n"
-"Language: zh_Hans\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
-"Content-Transfer-Encoding: 8bit\\n"
+"Project-Id-Version: luci-app-mwan4 0.1.0\n"
+"Language: zh_Hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 msgid "%d / %d"
 msgstr ""
