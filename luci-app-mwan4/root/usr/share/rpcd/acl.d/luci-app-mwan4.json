@@ -1,0 +1,21 @@
+{
+  "luci-app-mwan4": {
+    "description": "Configure mwan4 and read its status without shell execution",
+    "read": {
+      "ubus": {
+        "mwan4": [
+          "status"
+        ]
+      },
+      "uci": [
+        "mwan4",
+        "network"
+      ]
+    },
+    "write": {
+      "uci": [
+        "mwan4"
+      ]
+    }
+  }
+}
