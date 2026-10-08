@@ -15,7 +15,7 @@ This is a **first-stage LuCI integration package**, built from the configuration
 - Validate/capabilities/diagnostics/advanced_control RPC buttons and advanced screens.
 - Automatic migration between old `member/policy` and current `route/strategy` sections.
 - Any modification to current dual-WAN, PON, PBR, firewall or NPU configuration.
-- Full Chinese translation and verified firmware integration.
+- Verified firmware integration; remaining Chinese UI strings are being translated.
 
 The mossdef RPC currently exposes `status` only; the rest of brauliobo's RPC-driven screens need an explicit backend implementation and tests before enabling.
 

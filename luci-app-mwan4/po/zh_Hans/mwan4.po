@@ -1,0 +1,418 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-app-mwan4 0.1.0\\n"
+"Language: zh_Hans\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+
+msgid "%d / %d"
+msgstr ""
+
+msgid "100 200 vpn"
+msgstr ""
+
+msgid "443 or 1000-2000"
+msgstr ""
+
+msgid "ARP nping probe"
+msgstr "ARP nping 检测"
+
+msgid "ARP probe"
+msgstr "ARP 检测"
+
+msgid "Additional routing tables"
+msgstr "附加路由表"
+
+msgid "Address families"
+msgstr "地址族"
+
+msgid "Any"
+msgstr "任意"
+
+msgid "Any interface"
+msgstr "任意接口"
+
+msgid "Any or 203.0.113.0/24"
+msgstr ""
+
+msgid "Back to overview."
+msgstr "返回总览。"
+
+msgid "Bit mask used to keep mwan4 policy marks separate from other firewall marks. Use enough set bits for all interface IDs plus reserved fallback marks."
+msgstr "mwan4 与其他服务的标记隔离掩码，应为所有 WAN 接口及保留标记提供足够位数。"
+
+msgid "Choose TCP or UDP before matching source or destination ports."
+msgstr "需要匹配端口时请选择 TCP 或 UDP。"
+
+msgid "Choose a mwan4 policy path, the main routing table, or a fail-closed action."
+msgstr "选择 mwan4 策略、主路由表或拒绝流量。"
+
+msgid "Choose whether traffic should fail closed or use the main routing table when every path in this strategy is unhealthy or unavailable."
+msgstr "策略内全部路径失效时，选择拒绝流量或回退到主路由表。"
+
+msgid "Configure WAN links"
+msgstr "配置 WAN 接口"
+
+msgid "Configured interfaces reported by mwan4 status"
+msgstr "mwan4 状态报告的已配置接口"
+
+msgid "Create source-based rules in addition to traffic policy marks."
+msgstr "在流量标记之外额外创建基于源地址的策略路由规则。"
+
+msgid "DNS or nft set"
+msgstr "DNS 或 nft 集合"
+
+msgid "DNS probe"
+msgstr "DNS 检测"
+
+msgid "Destination address"
+msgstr "目标地址"
+
+msgid "Destination ports"
+msgstr "目标端口"
+
+msgid "Disabled links stay configured but are ignored by mwan4 routing and health checks."
+msgstr "禁用的 WAN 仍保留配置，但不参与 mwan4 路由和健康检测。"
+
+msgid "Enable SLA checks so high latency or packet loss can mark the link unhealthy."
+msgstr ""
+
+msgid "Enable logging for policies that also have per-policy logging enabled."
+msgstr "只有流量规则自身也开启日志时才会记录命中。"
+
+msgid "Enabled"
+msgstr "启用"
+
+msgid "Extra routing tables mwan4 should inspect in addition to the main routing table."
+msgstr "除主路由表外还需检查的路由表。"
+
+msgid "Fail closed (drop traffic)"
+msgstr "丢弃流量"
+
+msgid "Fail closed (reject traffic)"
+msgstr "拒绝流量"
+
+msgid "Failure interval (seconds)"
+msgstr "故障状态检测间隔（秒）"
+
+msgid "Failure latency (ms)"
+msgstr "故障延迟阈值（毫秒）"
+
+msgid "Failure packet loss (%)"
+msgstr "故障丢包率（%）"
+
+msgid "Failure values take the link down; recovery values bring it back after conditions improve."
+msgstr "达到故障阈值判定离线，满足恢复阈值后恢复上线。"
+
+msgid "Failures before down"
+msgstr "判定掉线所需失败次数"
+
+msgid "Firewall mark"
+msgstr "防火墙标记"
+
+msgid "Firewall mark mask"
+msgstr "防火墙标记掩码"
+
+msgid "Global settings affect all WAN links, strategies, paths, and traffic policies."
+msgstr "全局设置会影响所有 WAN、路由成员、策略及流量规则。"
+
+msgid "HTTP probe"
+msgstr "HTTP 检测"
+
+msgid "HTTPS health checks"
+msgstr "HTTPS 健康检测"
+
+msgid "Health check method"
+msgstr "健康检测方式"
+
+msgid "Health check targets"
+msgstr "健康检测目标"
+
+msgid "Health-check tracker processes"
+msgstr "健康监测进程"
+
+msgid "Healthy interval (seconds)"
+msgstr "健康状态检测间隔（秒）"
+
+msgid "Hosts or addresses used to decide whether this WAN link is healthy."
+msgstr "用来判断此 WAN 是否可用的主机名或 IP 地址。"
+
+msgid "How long a sticky source mapping is kept after the last match."
+msgstr "最后一次匹配后保留源地址会话映射的时间。"
+
+msgid "ICMP nping probe"
+msgstr "ICMP nping 检测"
+
+msgid "ICMP ping"
+msgstr "ICMP Ping"
+
+msgid "IPv4"
+msgstr "IPv4"
+
+msgid "IPv4 and IPv6 traffic policies are evaluated separately. Add both only for equivalent dual-stack matches."
+msgstr "IPv4 和 IPv6 规则分别匹配，仅在双栈匹配等效时才同时选择。"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "Ingress interface"
+msgstr "入口接口"
+
+msgid "Initial health state before the first health check result is available."
+msgstr "第一次健康检测完成前使用的初始状态。"
+
+msgid "Initial state"
+msgstr "初始状态"
+
+msgid "Keep failure interval while down"
+msgstr "掉线后保持故障检测间隔"
+
+msgid "Keep matching flows on the same policy path for the timeout period."
+msgstr "在会话保持期限内固定匹配流量的策略路径。"
+
+msgid "Keep probing at the failure interval until the WAN link recovers."
+msgstr "WAN 恢复前一直使用故障状态检测间隔。"
+
+msgid "Keeps generated firewall marks and routing tables stable across section reordering."
+msgstr "调整配置段顺序后仍保持防火墙标记和路由表编号稳定。"
+
+msgid "Log level"
+msgstr "日志级别"
+
+msgid "Log matches"
+msgstr "记录匹配日志"
+
+msgid "Log matching traffic policies"
+msgstr "记录命中的流量规则"
+
+msgid "Lower metrics are preferred. Equal metrics are balanced by weight."
+msgstr "优先选择 Metric 较小的路径；相同时按照权重分流。"
+
+msgid "Max TTL"
+msgstr "最大 TTL"
+
+msgid "Maximum hop count for ping health check probes."
+msgstr "Ping 健康检测允许的最大跳数。"
+
+msgid "Minimum number of targets that must pass before the WAN link is considered healthy."
+msgstr "判定 WAN 健康所需成功的最少检测目标数。"
+
+msgid "MultiWAN 4"
+msgstr "多线路 WAN 4"
+
+msgid "MultiWAN 4 - Global Settings"
+msgstr "MultiWAN 4 - 全局设置"
+
+msgid "MultiWAN 4 - Path Members"
+msgstr "MultiWAN 4 - 路由成员"
+
+msgid "MultiWAN 4 - Strategies"
+msgstr "MultiWAN 4 - 策略"
+
+msgid "MultiWAN 4 - Traffic Policies"
+msgstr "MultiWAN 4 - 流量规则"
+
+msgid "MultiWAN 4 - WAN Links"
+msgstr "MultiWAN 4 - WAN 接口"
+
+msgid "No configuration or diagnostics ACL is available for this session."
+msgstr "当前会话没有配置或诊断权限。"
+
+msgid "Not running"
+msgstr "未运行"
+
+msgid "Offline"
+msgstr "离线"
+
+msgid "Online"
+msgstr "在线"
+
+msgid "Open diagnostics"
+msgstr "打开诊断"
+
+msgid "Optional CIDR, single IP, or host address to match as the traffic source."
+msgstr "可填写 CIDR 网段、单个 IP 或主机地址作为源匹配条件。"
+
+msgid "Optional Linux routing table ID. Leave empty to reuse the stable interface ID."
+msgstr "可选的 Linux 路由表 ID，留空则使用固定接口 ID。"
+
+msgid "Optional fwmark for this interface. It must fit inside the global firewall mark mask."
+msgstr "此接口使用的可选 fwmark，必须落在全局防火墙标记掩码内。"
+
+msgid "Optional network interface where matching traffic enters the router."
+msgstr "指定流量进入路由器时的网络接口。"
+
+msgid "Optional nft set containing destination domains or addresses."
+msgstr "可选的 nftables 集合，可包含目标域名或地址。"
+
+msgid "Path members bind a WAN link to a priority metric and weight. Strategies choose one or more paths."
+msgstr "路由成员将 WAN 接口与优先级、权重关联；一个策略可以选择多个路由成员。"
+
+msgid "Paths"
+msgstr "路由成员"
+
+msgid "Paths this strategy may use when their WAN links are healthy. Path metric and weight decide priority and balancing."
+msgstr "策略可选择的健康路径。Metric 和权重决定优先级与负载比例。"
+
+msgid "Ping size"
+msgstr "Ping 数据大小"
+
+msgid "Policy path"
+msgstr "策略路径"
+
+msgid "Policy path: %s"
+msgstr "策略路径：%s"
+
+msgid "Ports support single values, ranges, and comma-separated lists."
+msgstr "支持单端口、端口范围以及逗号分隔的多个端口。"
+
+msgid "Priority metric"
+msgstr "优先级 Metric"
+
+msgid "Probe attempts sent to each health check target during one check cycle."
+msgstr "每轮向每个健康检测目标发送的探测次数。"
+
+msgid "Probe count"
+msgstr "检测次数"
+
+msgid "Probe method used for this WAN link health check."
+msgstr "此 WAN 健康检测所使用的探测方式。"
+
+msgid "Probe timeout (seconds)"
+msgstr "探测超时（秒）"
+
+msgid "Protocol"
+msgstr "协议"
+
+msgid "Read-only runtime summary. Configuration and diagnostics links are shown only when this session has the matching ACL."
+msgstr "只读运行状态。配置与诊断入口仅在当前账号拥有对应权限时显示。"
+
+msgid "Recovery interval (seconds)"
+msgstr "恢复检测间隔（秒）"
+
+msgid "Recovery latency (ms)"
+msgstr "恢复延迟阈值（毫秒）"
+
+msgid "Recovery packet loss (%)"
+msgstr "恢复丢包率（%）"
+
+msgid "Relative share when multiple healthy paths have the same metric."
+msgstr "健康路径 Metric 相同时，使用权重分配新连接。"
+
+msgid "Required successful health check targets"
+msgstr "要求成功的检测目标数"
+
+msgid "Routing table ID"
+msgstr "路由表 ID"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Runtime state reported by the backend"
+msgstr "后端报告的运行状态"
+
+msgid "Select IPv4, IPv6, or both when this link has working connectivity for each family."
+msgstr "选择 WAN 实际支持并能连通的 IPv4、IPv6 地址族。"
+
+msgid "Service"
+msgstr "服务"
+
+msgid "Source address"
+msgstr "源地址"
+
+msgid "Source ports"
+msgstr "源端口"
+
+msgid "Source routing"
+msgstr "源地址策略路由"
+
+msgid "Stable interface ID"
+msgstr "固定接口 ID"
+
+msgid "Sticky source sessions"
+msgstr "会话保持（Sticky）"
+
+msgid "Sticky timeout seconds"
+msgstr "会话保持超时（秒）"
+
+msgid "Strategies combine paths for failover or load balancing: the lowest healthy metric wins, equal metrics are balanced by weight."
+msgstr "策略将路由成员组合成故障切换或负载均衡；优先健康且 Metric 较小的路径，相同 Metric 按权重分流。"
+
+msgid "Successes before up"
+msgstr "判定恢复所需成功次数"
+
+msgid "Syslog priority used for logged mwan4 policy matches and service messages."
+msgstr "用于 mwan4 规则命中和服务消息的系统日志级别。"
+
+msgid "TCP probe"
+msgstr "TCP 检测"
+
+msgid "Trackers"
+msgstr "监测进程"
+
+msgid "Traffic policies are evaluated from top to bottom and choose a policy path, the main routing table, or a fail-closed action for matching traffic."
+msgstr "流量规则自上而下匹配，可选择特定策略、主路由表或直接拒绝流量。"
+
+msgid "Tune probe timing carefully; lower values react faster but can flap unstable links."
+msgstr "请谨慎调整探测周期，过短可能导致不稳定链路频繁切换。"
+
+msgid "UDP probe"
+msgstr "UDP 检测"
+
+msgid "Use 0.0.0.0/0 or ::/0 only when you really want a catch-all traffic policy."
+msgstr "仅在需要匹配所有流量时使用 0.0.0.0/0 或 ::/0。"
+
+msgid "Use HTTPS requests for httping probes."
+msgstr "使用 HTTPS 进行 httping 探测。"
+
+msgid "Use a positive decimal mark or hexadecimal mark such as 0x100."
+msgstr "请输入正十进制标记或 0x100 之类的十六进制标记。"
+
+msgid "Use a positive decimal value or hexadecimal value such as 0x3F00."
+msgstr "请输入正十进制或 0x3F00 之类的十六进制数。"
+
+msgid "Use a positive integer, or leave this empty for automatic assignment."
+msgstr "请输入正整数，留空则自动分配。"
+
+msgid "Use latency/loss SLA thresholds"
+msgstr "启用延迟/丢包质量阈值"
+
+msgid "Use main routing table"
+msgstr "使用主路由表"
+
+msgid "Use ports from 1-65535, ranges such as 1000-2000, or comma-separated lists."
+msgstr "请输入 1–65535 的端口、1000-2000 之类的范围或逗号分隔列表。"
+
+msgid "WAN link"
+msgstr "WAN 接口"
+
+msgid "WAN link used by this path."
+msgstr "这个路由成员所使用的 WAN 接口。"
+
+msgid "WAN links"
+msgstr "WAN 接口"
+
+msgid "WAN links map OpenWrt network interfaces to health checks and SLA thresholds."
+msgstr "WAN 接口关联 OpenWrt 逻辑接口、健康检测和质量阈值。"
+
+msgid "Weight"
+msgstr "权重"
+
+msgid "When no path is usable"
+msgstr "没有可用路径时"
+
+msgid "Write policy matches to the system log when global logging permits it."
+msgstr "开启全局日志后，将规则命中情况写入系统日志。"
+
+msgid "automatic"
+msgstr "自动分配"
+
+msgid "derived from mask"
+msgstr "从掩码计算"
+
+msgid "optional set name"
+msgstr "可选集合名称"
+
+msgid "same as stable ID"
+msgstr "与固定接口 ID 相同"
+
