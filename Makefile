@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan4
 PKG_VERSION:=0.1.1
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_LICENSE:=AGPL-3.0-or-later
 PKG_MAINTAINER:=Stan Grishin <stangri@melmac.ca>
 
@@ -63,6 +63,8 @@ define Build/Compile
 endef
 
 define Package/mwan4/install
+	$(INSTALL_DIR) $(1)/usr/share/mwan4
+	$(INSTALL_DATA) ./files/usr/share/mwan4/default-mossdef.config $(1)/usr/share/mwan4/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/etc/config/mwan4 \
 		$(1)/etc/config/

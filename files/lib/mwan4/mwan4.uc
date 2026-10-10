@@ -371,7 +371,7 @@ _ensure_init = function() {
 	mwan4.no_ipv6 = (system('ip -6 addr show >/dev/null 2>&1') == 0) ? 0 : 1;
 
 	if (!mwan4.mmx_mask) {
-		mwan4.mmx_mask = uci_get('globals', 'mwan4.mmx_mask') || '0x3F00';
+		mwan4.mmx_mask = uci_get('globals', 'mmx_mask') || '0x3F00';
 		mwan4.mmx_mask = lc(mwan4.mmx_mask);
 	}
 	if (!mwan4.mmx_mask_inv)
@@ -1643,6 +1643,11 @@ mwan4.nft_output = nft_output;
 mwan4.ubus_call = ubus_call;
 
 // UCI
+// Refresh rpcd's long-lived UCI cursor after settings have been committed.
+mwan4.reload_config = function() {
+    uci_ctx = cursor();
+    uci_ctx.load('mwan4');
+};
 mwan4.uci_bool = uci_bool;
 mwan4.uci_get = uci_get;
 mwan4.uci_get_list = uci_get_list;

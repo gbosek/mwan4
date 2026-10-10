@@ -37,7 +37,7 @@ function interfaces_status(request) {
 		let families = m.get_families(ifname);
 		let primary_si = ifname + '_' + (families[0] || 'ipv4');
 
-		let netstatus = m.ubus_call(sprintf('network.interface.%s', ifname), 'status');
+		let netstatus = m.ubus_call(sprintf('network.interface.%s', m.get_true_iface(ifname, families[0] || 'ipv4')), 'status');
 		let uci_track_ips = intf['track_ip'];
 		let track_status;
 
@@ -73,7 +73,23 @@ function interfaces_status(request) {
 			if (st == 'offline') overall_status = 'offline';
 		}
 
-		interfaces[ifname] = {
+        let family_status = {};
+        for (let family in families) {
+            let si = ifname + '_' + family;
+            let link = m.ubus_call('network.interface.' + m.get_true_iface(ifname, family), 'status');
+            family_status[family] = {
+                status: m.read_str(sprintf('%s/%s/STATUS', m.TRACK_STATUS_DIR, si)) || 'unknown',
+                up: link?.up || false
+            };
+        }
+        let score = m.read_int(sprintf('%s/%s/SCORE', m.TRACK_STATUS_DIR, primary_si));
+        let score_max = +(intf.up || '5') + +(intf.down || '5');
+        interfaces[ifname] = {
+            families: family_status,
+            score_current: score,
+            score_max,
+            score_percent: score_max > 0 ? score / score_max * 100 : null,
+            failed_targets: m.read_int(sprintf('%s/%s/LOST', m.TRACK_STATUS_DIR, primary_si)),
 			'age': uptime - m.read_int(sprintf('%s/%s/TIME', m.TRACK_STATUS_DIR, primary_si)),
 			'online': uptime - m.read_int(sprintf('%s/%s/ONLINE', m.TRACK_STATUS_DIR, primary_si)),
 			'offline': uptime - m.read_int(sprintf('%s/%s/OFFLINE', m.TRACK_STATUS_DIR, primary_si)),
@@ -92,7 +108,52 @@ function interfaces_status(request) {
 	return interfaces;
 }
 
+// XG2010G compatibility: report real procd state; no invented advanced API.
+function runtime_summary() {
+    let instances = m.ubus_call('service', 'list', { name: 'mwan4' })?.mwan4?.instances || {};
+    let running = 0, expected = 0, service_running = false;
+    for (let name in keys(instances)) {
+        if (instances[name]?.running) {
+            service_running = true;
+            if (match(name, /^track_/)) running++;
+        }
+    }
+    m.uci_foreach('interface', function(intf) {
+        if (m.uci_bool(intf.enabled) && length(intf.track_ip))
+            expected += length(m.get_families(intf['.name']));
+    });
+    return { service_running, trackers_running: running, trackers_expected: expected };
+}
+
+// RPC ACL grants this method only to operators. No arbitrary command execution.
+function control_call(request) {
+	m.reload_config();
+    let action = request.args.action;
+    let iface = request.args.interface;
+    let command;
+    if (action == 'start' || action == 'stop' || action == 'restart') {
+        if (iface != null && iface != '')
+            return { ok: false, errors: [{ message: 'Service action does not accept an interface' }] };
+        command = '/etc/init.d/mwan4 ' + action;
+    } else if (action == 'ifup' || action == 'ifdown') {
+        if (type(iface) != 'string' || !match(iface, /^[a-zA-Z0-9_]+$/))
+            return { ok: false, errors: [{ message: 'Invalid interface name' }] };
+        let configured = false;
+        m.uci_foreach('interface', function(intf) {
+            if (intf['.name'] == iface) configured = true;
+        });
+        if (!configured)
+            return { ok: false, errors: [{ message: 'Interface is not configured in mwan4' }] };
+        command = '/usr/sbin/mwan4 ' + action + ' ' + iface;
+    } else {
+        return { ok: false, errors: [{ message: 'Unsupported control action' }] };
+    }
+    let rc = system(command + ' >/dev/null 2>&1');
+    return rc == 0 ? { ok: true } : { ok: false, errors: [{ message: 'mwan4 command failed' }], exit_code: rc };
+}
+
 function status_call(request) {
+	m.reload_config();
 	switch (request.args.section) {
 		case 'connected':
 			return {
@@ -112,8 +173,11 @@ function status_call(request) {
 			return {
 				'interfaces': interfaces_status(request),
 			};
+		case 'counters':
+			return { supported: false };
 		default:
 			return {
+				'diagnostics': runtime_summary(),
 				'interfaces': interfaces_status(request),
 				'connected': {
 					'ipv4': m.report_connected('ipv4'),
@@ -128,6 +192,10 @@ function status_call(request) {
 }
 
 const methods = {
+	control: {
+		args: { action: 'action', interface: 'interface' },
+		call: control_call
+	},
 	status: {
 		args: {
 			section: 'section',

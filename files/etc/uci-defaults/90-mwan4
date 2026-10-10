@@ -3,6 +3,13 @@
 # Copyright 2026 MOSSDeF, Stan Grishin (stangri@melmac.ca).
 # Based on original mwan3 by Florian Eckert <fe@dev.tdt.de>
 
+# Preserve incompatible Rust configuration when sysupgrade keeps /etc/config.
+if uci -q show mwan4 | grep -qE '^mwan4\.[^.=]+=global$'; then
+    cp -p /etc/config/mwan4 /etc/config/mwan4.pre-mossdef-rust
+    cp /usr/share/mwan4/default-mossdef.config /etc/config/mwan4
+    logger -t mwan4-migration 'Saved incompatible Rust config; select WAN links in LuCI before enabling routing'
+fi
+
 # Migrate mwan3 configuration to mwan4 (one-time migration)
 if [ -f /etc/config/mwan3 ] && [ ! -f /etc/config/mwan3.migrated ]; then
 	[ -f /etc/config/mwan4 ] && mv /etc/config/mwan4 /etc/config/mwan4.default
