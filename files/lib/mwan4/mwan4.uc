@@ -371,7 +371,7 @@ _ensure_init = function() {
 	mwan4.no_ipv6 = (system('ip -6 addr show >/dev/null 2>&1') == 0) ? 0 : 1;
 
 	if (!mwan4.mmx_mask) {
-		mwan4.mmx_mask = uci_get('globals', 'mwan4.mmx_mask') || '0x3F00';
+		mwan4.mmx_mask = uci_get('globals', 'mmx_mask') || '0x3F00';
 		mwan4.mmx_mask = lc(mwan4.mmx_mask);
 	}
 	if (!mwan4.mmx_mask_inv)
@@ -418,7 +418,7 @@ function get_families(iface) {
 function foreach_family(iface, cb, ...extra) {
 	let families = get_families(iface);
 	for (let family in families)
-		call(cb, null, iface, family, ...extra);
+		cb(iface, family, ...extra);
 }
 
 // ── Interface Helpers ────────────────────────────────────────────────
@@ -491,7 +491,9 @@ function get_mwan4track_status(iface, family) {
 	if (!pid) return 'down';
 
 	let cmdline = read_str(sprintf('/proc/%s/cmdline', pid));
-	if (!cmdline || index(cmdline, 'mwan4track') < 0 || index(cmdline, status_iface) < 0)
+	let argv = split(cmdline || '', '\x00');
+	let script_pos = index(argv, '/lib/mwan4/mwan4track.uc');
+	if (script_pos < 0 || argv[script_pos + 1] != iface || argv[script_pos + 2] != family)
 		return 'down';
 
 	let started = read_str(sprintf('%s/%s/STARTED', TRACK_STATUS_DIR, status_iface));
@@ -1337,6 +1339,27 @@ function delete_iface_route(iface) {
 
 // ── Interface IP Rules ───────────────────────────────────────────────
 
+function delete_iface_rules_family(iface, family) { // ucode-lsp disable
+	let id = get_iface_id(iface);
+	if (!id) return;
+
+	let ip_cmd;
+	if (family == 'ipv4')
+		ip_cmd = 'ip -4';
+	else if (family == 'ipv6' && mwan4.no_ipv6 == 0)
+		ip_cmd = 'ip -6';
+	else
+		return;
+
+	for (let line in cmd_lines(sprintf('%s rule list', ip_cmd))) {
+		let m = match(line, /^([0-9]+):/);
+		if (!m) continue;
+		let pref = int(m[1]);
+		if (pref > 1000 && pref < 4000 && (pref % 1000) == id)
+			run(sprintf('%s rule del pref %d', ip_cmd, pref));
+	}
+}
+
 function create_iface_rules(iface, device) {
 	foreach_family(iface, function(iface, family, device) {
 		let id = get_iface_id(iface);
@@ -1358,27 +1381,6 @@ function create_iface_rules(iface, device) {
 		run(sprintf('%s rule add pref %d fwmark %s/%s lookup %d', ip_cmd, id + 2000, mark, mwan4.mmx_mask, id));
 		run(sprintf('%s rule add pref %d fwmark %s/%s unreachable', ip_cmd, id + 3000, mark, mwan4.mmx_mask));
 	}, device);
-}
-
-function delete_iface_rules_family(iface, family) { // ucode-lsp disable
-	let id = get_iface_id(iface);
-	if (!id) return;
-
-	let ip_cmd;
-	if (family == 'ipv4')
-		ip_cmd = 'ip -4';
-	else if (family == 'ipv6' && mwan4.no_ipv6 == 0)
-		ip_cmd = 'ip -6';
-	else
-		return;
-
-	for (let line in cmd_lines(sprintf('%s rule list', ip_cmd))) {
-		let m = match(line, /^([0-9]+):/);
-		if (!m) continue;
-		let pref = int(m[1]);
-		if (pref > 1000 && pref < 4000 && (pref % 1000) == id)
-			run(sprintf('%s rule del pref %d', ip_cmd, pref));
-	}
 }
 
 function delete_iface_rules(iface) {
@@ -1441,7 +1443,7 @@ function report_iface_status() {
 
 function get_strategies_data(family_suffix) {
 	let strategies = {};
-	let chains_out = nft_output(sprintf('list chains inet %s 2>/dev/null', NFT_TABLE));
+	let chains_out = nft_output(sprintf('list table inet %s 2>/dev/null', NFT_TABLE));
 
 	for (let line in split(chains_out, '\n')) {
 		let m = match(line, /chain (mwan4_strategy_(.+)_(ipv4|ipv6))/);
@@ -1643,6 +1645,11 @@ mwan4.nft_output = nft_output;
 mwan4.ubus_call = ubus_call;
 
 // UCI
+// Refresh rpcd's long-lived UCI cursor after settings have been committed.
+mwan4.reload_config = function() {
+    uci_ctx = cursor();
+    uci_ctx.load('mwan4');
+};
 mwan4.uci_bool = uci_bool;
 mwan4.uci_get = uci_get;
 mwan4.uci_get_list = uci_get_list;
