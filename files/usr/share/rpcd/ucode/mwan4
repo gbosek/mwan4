@@ -17,11 +17,17 @@ function get_strategies(family) {
 			if (e.total > 0)
 				push(result[name], {
 					'interface': e.iface,
-					'percent': e.weight / e.total * 100,
+					'percent': e.weight * 100.0 / e.total,
 				});
 		}
 	}
 	return result;
+}
+
+// Missing measurements must remain null instead of looking like zero latency/loss.
+function read_optional_int(path) {
+    let value = m.read_str(path);
+    return value == null ? null : int(value);
 }
 
 function interfaces_status(request) {
@@ -44,7 +50,7 @@ function interfaces_status(request) {
 		if (!length(uci_track_ips)) {
 			track_status = 'disabled';
 		} else if (procd?.[sprintf('track_%s', primary_si)]?.running) {
-			let started = m.read_str(sprintf('%s/%s/STARTED', m.TRACK_STATUS_DIR, primary_si)) || '';
+			let started = m.read_str(sprintf('%s/%s/STARTED', m.pkg.TRACK_STATUS_DIR, primary_si)) || '';
 			switch (started) {
 				case '0': track_status = 'paused'; break;
 				case '1': track_status = 'active'; break;
@@ -58,9 +64,9 @@ function interfaces_status(request) {
 		for (let ip in uci_track_ips) {
 			push(track_ips, {
 				'ip': ip,
-				'status': m.read_str(sprintf('%s/%s/TRACK_%s', m.TRACK_STATUS_DIR, primary_si, ip)) || 'unknown',
-				'latency': m.read_int(sprintf('%s/%s/LATENCY_%s', m.TRACK_STATUS_DIR, primary_si, ip)),
-				'packetloss': m.read_int(sprintf('%s/%s/LOSS_%s', m.TRACK_STATUS_DIR, primary_si, ip)),
+				'status': m.read_str(sprintf('%s/%s/TRACK_%s', m.pkg.TRACK_STATUS_DIR, primary_si, ip)) || 'unknown',
+				'latency': read_optional_int(sprintf('%s/%s/LATENCY_%s', m.pkg.TRACK_STATUS_DIR, primary_si, ip)),
+				'packetloss': read_optional_int(sprintf('%s/%s/LOSS_%s', m.pkg.TRACK_STATUS_DIR, primary_si, ip)),
 			});
 		}
 
@@ -68,7 +74,7 @@ function interfaces_status(request) {
 		let overall_status = 'unknown';
 		for (let family in families) {
 			let si = ifname + '_' + family;
-			let st = m.read_str(sprintf('%s/%s/STATUS', m.TRACK_STATUS_DIR, si)) || 'unknown';
+			let st = m.read_str(sprintf('%s/%s/STATUS', m.pkg.TRACK_STATUS_DIR, si)) || 'unknown';
 			if (st == 'online') { overall_status = 'online'; break; }
 			if (st == 'offline') overall_status = 'offline';
 		}
@@ -78,25 +84,26 @@ function interfaces_status(request) {
             let si = ifname + '_' + family;
             let link = m.ubus_call('network.interface.' + m.get_true_iface(ifname, family), 'status');
             family_status[family] = {
-                status: m.read_str(sprintf('%s/%s/STATUS', m.TRACK_STATUS_DIR, si)) || 'unknown',
+                status: m.read_str(sprintf('%s/%s/STATUS', m.pkg.TRACK_STATUS_DIR, si)) || 'unknown',
                 up: link?.up || false
             };
         }
-        let score = m.read_int(sprintf('%s/%s/SCORE', m.TRACK_STATUS_DIR, primary_si));
+        let score = read_optional_int(sprintf('%s/%s/SCORE', m.pkg.TRACK_STATUS_DIR, primary_si));
         let score_max = +(intf.up || '5') + +(intf.down || '5');
         interfaces[ifname] = {
             families: family_status,
             score_current: score,
             score_max,
-            score_percent: score_max > 0 ? score / score_max * 100 : null,
-            failed_targets: m.read_int(sprintf('%s/%s/LOST', m.TRACK_STATUS_DIR, primary_si)),
-			'age': uptime - m.read_int(sprintf('%s/%s/TIME', m.TRACK_STATUS_DIR, primary_si)),
-			'online': uptime - m.read_int(sprintf('%s/%s/ONLINE', m.TRACK_STATUS_DIR, primary_si)),
-			'offline': uptime - m.read_int(sprintf('%s/%s/OFFLINE', m.TRACK_STATUS_DIR, primary_si)),
+            score_percent: score != null && score_max > 0 ? score * 100.0 / score_max : null,
+            failed_targets: length(filter(track_ips, target => target.status != 'unknown'))
+                ? length(filter(track_ips, target => target.status == 'down')) : null,
+			'age': uptime - read_optional_int(sprintf('%s/%s/TIME', m.pkg.TRACK_STATUS_DIR, primary_si)),
+			'online': uptime - read_optional_int(sprintf('%s/%s/ONLINE', m.pkg.TRACK_STATUS_DIR, primary_si)),
+			'offline': uptime - read_optional_int(sprintf('%s/%s/OFFLINE', m.pkg.TRACK_STATUS_DIR, primary_si)),
 			'uptime': netstatus?.uptime || 0,
-			'score': m.read_int(sprintf('%s/%s/SCORE', m.TRACK_STATUS_DIR, primary_si)),
-			'lost': m.read_int(sprintf('%s/%s/LOST', m.TRACK_STATUS_DIR, primary_si)),
-			'turn': m.read_int(sprintf('%s/%s/TURN', m.TRACK_STATUS_DIR, primary_si)),
+			'score': read_optional_int(sprintf('%s/%s/SCORE', m.pkg.TRACK_STATUS_DIR, primary_si)),
+			'lost': read_optional_int(sprintf('%s/%s/LOST', m.pkg.TRACK_STATUS_DIR, primary_si)),
+			'turn': read_optional_int(sprintf('%s/%s/TURN', m.pkg.TRACK_STATUS_DIR, primary_si)),
 			'status': overall_status,
 			'enabled': m.uci_bool(intf['enabled']),
 			'running': track_status == 'active',

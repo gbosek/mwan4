@@ -418,7 +418,7 @@ function get_families(iface) {
 function foreach_family(iface, cb, ...extra) {
 	let families = get_families(iface);
 	for (let family in families)
-		call(cb, null, iface, family, ...extra);
+		cb(iface, family, ...extra);
 }
 
 // ── Interface Helpers ────────────────────────────────────────────────
@@ -491,7 +491,9 @@ function get_mwan4track_status(iface, family) {
 	if (!pid) return 'down';
 
 	let cmdline = read_str(sprintf('/proc/%s/cmdline', pid));
-	if (!cmdline || index(cmdline, 'mwan4track') < 0 || index(cmdline, status_iface) < 0)
+	let argv = split(cmdline || '', '\x00');
+	let script_pos = index(argv, '/lib/mwan4/mwan4track.uc');
+	if (script_pos < 0 || argv[script_pos + 1] != iface || argv[script_pos + 2] != family)
 		return 'down';
 
 	let started = read_str(sprintf('%s/%s/STARTED', TRACK_STATUS_DIR, status_iface));
@@ -1441,7 +1443,7 @@ function report_iface_status() {
 
 function get_strategies_data(family_suffix) {
 	let strategies = {};
-	let chains_out = nft_output(sprintf('list chains inet %s 2>/dev/null', NFT_TABLE));
+	let chains_out = nft_output(sprintf('list table inet %s 2>/dev/null', NFT_TABLE));
 
 	for (let line in split(chains_out, '\n')) {
 		let m = match(line, /chain (mwan4_strategy_(.+)_(ipv4|ipv6))/);
