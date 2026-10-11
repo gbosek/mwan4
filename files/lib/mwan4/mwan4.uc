@@ -1339,6 +1339,27 @@ function delete_iface_route(iface) {
 
 // ── Interface IP Rules ───────────────────────────────────────────────
 
+function delete_iface_rules_family(iface, family) { // ucode-lsp disable
+	let id = get_iface_id(iface);
+	if (!id) return;
+
+	let ip_cmd;
+	if (family == 'ipv4')
+		ip_cmd = 'ip -4';
+	else if (family == 'ipv6' && mwan4.no_ipv6 == 0)
+		ip_cmd = 'ip -6';
+	else
+		return;
+
+	for (let line in cmd_lines(sprintf('%s rule list', ip_cmd))) {
+		let m = match(line, /^([0-9]+):/);
+		if (!m) continue;
+		let pref = int(m[1]);
+		if (pref > 1000 && pref < 4000 && (pref % 1000) == id)
+			run(sprintf('%s rule del pref %d', ip_cmd, pref));
+	}
+}
+
 function create_iface_rules(iface, device) {
 	foreach_family(iface, function(iface, family, device) {
 		let id = get_iface_id(iface);
@@ -1360,27 +1381,6 @@ function create_iface_rules(iface, device) {
 		run(sprintf('%s rule add pref %d fwmark %s/%s lookup %d', ip_cmd, id + 2000, mark, mwan4.mmx_mask, id));
 		run(sprintf('%s rule add pref %d fwmark %s/%s unreachable', ip_cmd, id + 3000, mark, mwan4.mmx_mask));
 	}, device);
-}
-
-function delete_iface_rules_family(iface, family) { // ucode-lsp disable
-	let id = get_iface_id(iface);
-	if (!id) return;
-
-	let ip_cmd;
-	if (family == 'ipv4')
-		ip_cmd = 'ip -4';
-	else if (family == 'ipv6' && mwan4.no_ipv6 == 0)
-		ip_cmd = 'ip -6';
-	else
-		return;
-
-	for (let line in cmd_lines(sprintf('%s rule list', ip_cmd))) {
-		let m = match(line, /^([0-9]+):/);
-		if (!m) continue;
-		let pref = int(m[1]);
-		if (pref > 1000 && pref < 4000 && (pref % 1000) == id)
-			run(sprintf('%s rule del pref %d', ip_cmd, pref));
-	}
 }
 
 function delete_iface_rules(iface) {
