@@ -1529,9 +1529,9 @@ function interface_hotplug_shutdown(iface, ifdown) {
 	if (iface_st != 'online' && !ifdown) return;
 
 	if (ifdown) {
-		system(sprintf("env -i ACTION=ifdown INTERFACE=%s sh /etc/hotplug.d/iface/15-mwan4", iface));
+		system(sprintf("env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin ACTION=ifdown INTERFACE=%s /bin/sh /etc/hotplug.d/iface/15-mwan4", iface));
 	} else if (iface_st == 'online') {
-		system(sprintf("env -i MWAN4_SHUTDOWN=1 ACTION=disconnected INTERFACE=%s /sbin/hotplug-call iface", iface));
+		system(sprintf("env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin MWAN4_SHUTDOWN=1 ACTION=disconnected INTERFACE=%s /sbin/hotplug-call iface", iface));
 	}
 }
 
@@ -1577,12 +1577,40 @@ function ifup(iface, caller) {
 		uci_ctx.load('mwan4');
 	}
 
-	let true_iface = get_true_iface(iface);
-	let iface_status = ubus_call(sprintf('network.interface.%s', true_iface), 'status');
-	if (!iface_status?.up || !iface_status?.l3_device) return;
+	if (!uci_bool(uci_get(iface, 'enabled'))) return;
+	if (!match(iface, /^[a-zA-Z0-9_.:-]+$/)) return;
+
+	let iface_status = null;
+	for (let family in get_families(iface)) {
+		let true_iface = get_true_iface(iface, family);
+		let candidate = ubus_call(sprintf('network.interface.%s', true_iface), 'status');
+		if (candidate?.up && candidate?.l3_device) {
+			iface_status = candidate;
+			break;
+		}
+	}
+	if (!iface_status) return;
 
 	let l3_device = iface_status.l3_device;
-	let cmd_str = sprintf("env -i MWAN4_STARTUP=%s ACTION=ifup INTERFACE=%s DEVICE=%s sh /etc/hotplug.d/iface/15-mwan4",
+	if (!match(l3_device, /^[a-zA-Z0-9_.:-]+$/)) return;
+	if (caller == 'init') {
+		// Setup already runs under the service lock. Apply the native rules
+		// directly rather than depending on a nested clean-environment shell.
+		create_iface_rules(iface, l3_device);
+		create_iface_route(iface);
+		let state = uci_get(iface, 'initial_state') || 'online';
+		if (state == 'offline') {
+			for (let family in get_families(iface)) {
+				if (read_str(sprintf('%s/%s_%s/STATUS', TRACK_STATUS_DIR, iface, family)) == 'online') {
+					state = 'online';
+					break;
+				}
+			}
+		}
+		set_iface_hotplug_state(iface, state);
+		return;
+	}
+	let cmd_str = sprintf("env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin MWAN4_STARTUP=%s ACTION=ifup INTERFACE=%s DEVICE=%s /bin/sh /etc/hotplug.d/iface/15-mwan4",
 		caller, iface, l3_device);
 	system(cmd_str);
 }
