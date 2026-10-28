@@ -23,6 +23,7 @@ fi
 
 mwan4_interface_index=0
 mwan4_mmx_mask='0x3F00'
+mwan4_legacy_rule_semantics=0
 
 is_positive_int() {
 	case "$1" in
@@ -152,6 +153,13 @@ migrate_flush_conntrack() {
 migrate_rule() {
 	local name="$1"
 	local use_policy
+	local local_rule
+
+	# r10 matched router-originated traffic too; retain that only for legacy rules.
+	config_get local_rule "$name" local
+	if [ "$mwan4_legacy_rule_semantics" -eq 1 ] && [ -z "$local_rule" ]; then
+		uci_set mwan4 "$name" local 1
+	fi
 
 	config_get use_policy "$name" use_policy
 	if [ -n "$use_policy" ]; then
@@ -191,6 +199,8 @@ migrate_interface() {
 }
 
 config_load mwan4
+config_get rule_semantics globals xg2010g_rule_semantics
+[ "$rule_semantics" = 1 ] || mwan4_legacy_rule_semantics=1
 config_foreach migrate_globals globals
 config_get loaded_mmx_mask globals mmx_mask
 [ -n "$loaded_mmx_mask" ] && mwan4_mmx_mask="$loaded_mmx_mask"
@@ -199,6 +209,7 @@ config_foreach migrate_policy policy
 config_foreach migrate_rule rule
 config_foreach migrate_interface interface
 
+uci_set mwan4 globals xg2010g_rule_semantics 1
 uci_commit mwan4
 
 exit 0
