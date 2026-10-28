@@ -3,7 +3,7 @@
 # Copyright 2026 MOSSDeF, Stan Grishin (stangri@melmac.ca).
 # Based on original mwan3 by Florian Eckert <fe@dev.tdt.de>
 
-readonly PKG_VERSION='0.1.1-r28'
+readonly PKG_VERSION='0.1.1-r29'
 
 . "${IPKG_INSTROOT}/lib/functions.sh"
 

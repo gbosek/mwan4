@@ -19,6 +19,11 @@ fi
 # globals: legacy dotted aliases -> canonical plain options
 # interface ids: seed id/table_id/mark from the current section order
 
+# Preserve legacy input once before changing its types and member lists.
+if [ -f /etc/config/mwan4 ] && grep -qE '(^[[:space:]]*config[[:space:]]+(member|policy)[[:space:]]|^[[:space:]]*(option|list)[[:space:]]+use_member[[:space:]])' /etc/config/mwan4; then
+	[ -f /etc/config/mwan4.pre-paired-migration ] || cp -p /etc/config/mwan4 /etc/config/mwan4.pre-paired-migration || exit 1
+fi
+
 . /lib/functions.sh
 
 mwan4_interface_index=0
@@ -105,16 +110,29 @@ migrate_member() {
 
 # Migrate 'policy' section type to 'strategy'
 # Also rename use_member list to use_route
-migrate_policy() {
+migrate_strategy() {
 	local name="$1"
 	local members
-
-	uci_set mwan4 "$name" strategy
-
+	local routes
+	local member
 	config_get members "$name" use_member
+	config_get routes "$name" use_route
 	if [ -n "$members" ]; then
-		uci_rename mwan4 "$name" use_member use_route
+		for member in $members; do
+			case " $routes " in
+				*" $member "*) ;;
+				*) uci_add_list mwan4 "$name" use_route "$member"
+				   routes="${routes:+$routes }$member" ;;
+			esac
+		done
+		uci_remove mwan4 "$name" use_member
 	fi
+}
+
+migrate_policy() {
+	local name="$1"
+	uci_set mwan4 "$name" strategy
+	migrate_strategy "$name"
 }
 
 # Migrate 'option family' to 'list family'
@@ -205,6 +223,7 @@ config_foreach migrate_globals globals
 config_get loaded_mmx_mask globals mmx_mask
 [ -n "$loaded_mmx_mask" ] && mwan4_mmx_mask="$loaded_mmx_mask"
 config_foreach migrate_member member
+config_foreach migrate_strategy strategy
 config_foreach migrate_policy policy
 config_foreach migrate_rule rule
 config_foreach migrate_interface interface
