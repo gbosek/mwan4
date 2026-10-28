@@ -8,7 +8,7 @@ import m from '/lib/mwan4/mwan4.uc';
 import importer from '/lib/mwan4/pbr_import.uc';
 
 m.set_scriptname('rpcd-mwan4');
-m.init();
+m.load(); // Status reads must not create runtime directories or start services.
 
 function rpc_args(request) {
 	return request?.args || {};

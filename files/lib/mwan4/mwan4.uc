@@ -2580,8 +2580,8 @@ function sticky_chain_lines(rd, fam) {
 		// Restore the mark from the previous session, else let the strategy assign one, then refresh the map.
 		sprintf('\t\tmeta mark & %s == 0 meta mark set %s map @%s', mask, saddr, map_name),
 		sprintf('\t\tmeta mark & %s == 0 jump %s_strategy_%s_%s', mask, NFT_PREFIX, rd.use_strategy, fam),
-		sprintf('\t\tmeta mark & %s != 0 meta mark & %s != %s update @%s { %s : meta mark }',
-			mask, mask, mwan4.mmx_default, map_name, saddr),
+		sprintf('\t\tmeta mark & %s != 0 meta mark & %s != %s meta mark & %s != %s meta mark & %s != %s update @%s { %s : meta mark }',
+			mask, mask, mwan4.mmx_default, mask, mwan4.mmx_blackhole, mask, mwan4.mmx_unreachable, map_name, saddr),
 		'\t}',
 	];
 }
@@ -3936,9 +3936,9 @@ function interface_hotplug_shutdown(iface, ifdown) {
 	if (iface_st != 'online' && !ifdown) return;
 
 	if (ifdown) {
-		system(sprintf("env -i ACTION=ifdown INTERFACE=%s sh /etc/hotplug.d/iface/15-mwan4", shell_quote(iface)));
+		system(sprintf("env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin ACTION=ifdown INTERFACE=%s /bin/sh /etc/hotplug.d/iface/15-mwan4", shell_quote(iface)));
 	} else if (iface_st == 'online') {
-		system(sprintf("env -i MWAN4_SHUTDOWN=1 ACTION=disconnected INTERFACE=%s /sbin/hotplug-call iface", shell_quote(iface)));
+		system(sprintf("env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin MWAN4_SHUTDOWN=1 ACTION=disconnected INTERFACE=%s /sbin/hotplug-call iface", shell_quote(iface)));
 	}
 }
 
@@ -3994,9 +3994,14 @@ function ifup(iface, caller) {
 		uci_ctx.load('mwan4');
 	}
 
-	let true_iface = get_true_iface(iface);
-	let iface_status = ubus_call(sprintf('network.interface.%s', true_iface), 'status');
-	if (!iface_status?.up || !iface_status?.l3_device) return;
+	if (!uci_bool(uci_get(iface, 'enabled'))) return;
+	let iface_status = null;
+	for (let family in get_families(iface)) {
+		let true_iface = get_true_iface(iface, family);
+		let candidate = ubus_call(sprintf('network.interface.%s', true_iface), 'status');
+		if (candidate?.up && candidate?.l3_device) { iface_status = candidate; break; }
+	}
+	if (!iface_status) return;
 
 	let l3_device = iface_status.l3_device;
 	if (!validate_device_name(l3_device)) {
@@ -4009,7 +4014,7 @@ function ifup(iface, caller) {
 		set_iface_hotplug_state(iface, uci_get(iface, 'initial_state') == 'offline' ? 'offline' : 'online');
 		return;
 	}
-	let cmd_str = sprintf("env -i MWAN4_STARTUP=%s ACTION=ifup INTERFACE=%s DEVICE=%s sh /etc/hotplug.d/iface/15-mwan4",
+	let cmd_str = sprintf("env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin MWAN4_STARTUP=%s ACTION=ifup INTERFACE=%s DEVICE=%s /bin/sh /etc/hotplug.d/iface/15-mwan4",
 		shell_quote(caller || ''), shell_quote(iface), shell_quote(l3_device));
 	system(cmd_str);
 }
@@ -5926,11 +5931,11 @@ function configured_interface(iface) {
 function service_control(action) {
 	switch (action) {
 	case 'start':
-		return system('/etc/init.d/mwan4 start');
+		return system('/etc/init.d/mwan4 enable && /etc/init.d/mwan4 start');
 	case 'stop':
-		return system('/etc/init.d/mwan4 stop');
+		return system('/etc/init.d/mwan4 disable && /etc/init.d/mwan4 stop');
 	case 'restart':
-		return system('/etc/init.d/mwan4 restart');
+		return system('/etc/init.d/mwan4 enable && /etc/init.d/mwan4 restart');
 	case 'reload':
 		return system('/etc/init.d/mwan4 reload');
 	}

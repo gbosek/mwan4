@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan4
 PKG_VERSION:=0.1.1
-PKG_RELEASE:=26
+PKG_RELEASE:=27
 PKG_LICENSE:=AGPL-3.0-or-later
 PKG_MAINTAINER:=Stan Grishin <stangri@melmac.ca>
 
@@ -131,9 +131,8 @@ define Package/mwan4/postinst
 #!/bin/sh
 # check if we are on real system
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	echo -n "Installing rc.d symlink for mwan4... "
-	/etc/init.d/mwan4 enable && echo "OK" || echo "FAIL"
-	/etc/init.d/rpcd restart >/dev/null 2>&1
+	# Installing or upgrading must preserve the operator's autostart choice.
+	/etc/init.d/rpcd reload >/dev/null 2>&1
 fi
 exit 0
 endef

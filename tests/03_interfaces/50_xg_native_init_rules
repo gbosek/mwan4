@@ -1,0 +1,46 @@
+Native startup installs actual UCI-assigned WAN IDs without spawning nested hotplug.
+
+-- Testcase --
+import m from 'mwan4';
+m.init();
+let calls = [];
+global.system = function(command) { push(calls, command); return 0; };
+m.ifup('wanb', 'init');
+for (let command in calls)
+	if (index(command, 'rule add pref') >= 0 || index(command, 'env -i') >= 0)
+		print(command, '\n');
+print(global.mocklib.read_captured('/var/run/mwan4/iface_state/wanb'), '\n');
+-- End --
+
+-- Expect stdout --
+ip -4 rule add pref 1003 iif 'pppoe-wanb' lookup 3 >/dev/null 2>&1
+ip -4 rule add pref 2003 fwmark 0x300/0x3f00 lookup 3 >/dev/null 2>&1
+ip -4 rule add pref 3003 fwmark 0x300/0x3f00 unreachable >/dev/null 2>&1
+ip -6 rule add pref 1003 iif 'pppoe-wanb' lookup 3 >/dev/null 2>&1
+ip -6 rule add pref 2003 fwmark 0x300/0x3f00 lookup 3 >/dev/null 2>&1
+ip -6 rule add pref 3003 fwmark 0x300/0x3f00 unreachable >/dev/null 2>&1
+online
+-- End --
+
+-- File uci/mwan4.json --
+{
+  "globals": [{".name":"globals","mmx_mask":"0x3F00"}],
+  "interface": [
+    {".name":"wan","enabled":"1","family":["ipv4"]},
+    {".name":"wan6","enabled":"0","family":["ipv6"]},
+    {".name":"wanb","enabled":"1","family":["ipv4","ipv6"]}
+  ]
+}
+-- End --
+
+-- File ubus/network.interface.wanb~status.json --
+{"up":true,"l3_device":"pppoe-wanb"}
+-- End --
+
+-- File ubus/network.interface.wanb_4~status.json --
+{"up":true,"l3_device":"pppoe-wanb"}
+-- End --
+
+-- File ubus/network.interface.wanb_6~status.json --
+{"up":false,"l3_device":"pppoe-wanb"}
+-- End --

@@ -50,7 +50,7 @@ table inet fw4 {
 	chain mwan4_rule_https_ipv4 {
 		meta mark & 0x3f00 == 0 meta mark set ip saddr map @mwan4_rule_ipv4_https
 		meta mark & 0x3f00 == 0 jump mwan4_strategy_balanced_ipv4
-		meta mark & 0x3f00 != 0 meta mark & 0x3f00 != 0x3f00 update @mwan4_rule_ipv4_https { ip saddr : meta mark }
+		meta mark & 0x3f00 != 0 meta mark & 0x3f00 != 0x3f00 meta mark & 0x3f00 != 0x3d00 meta mark & 0x3f00 != 0x3e00 update @mwan4_rule_ipv4_https { ip saddr : meta mark }
 	}
 	chain mwan4_rules_ipv4 {
 		meta l4proto tcp tcp dport { 443 } meta mark & 0x3f00 == 0 ct state new counter name mwan4_counter_conn_https_ipv4

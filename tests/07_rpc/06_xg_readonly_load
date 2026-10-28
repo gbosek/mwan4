@@ -1,0 +1,31 @@
+Loading and reading the RPC module must not create runtime state or start MWAN4.
+
+-- File ubus/network.interface.wan_4~status.json --
+{"up":false}
+-- End --
+
+-- File ubus/network.interface.wan6_6~status.json --
+{"up":false}
+-- End --
+
+-- File ubus/network.interface.wanb_4~status.json --
+{"up":false}
+-- End --
+
+-- File ubus/network.interface.wanb6_6~status.json --
+{"up":false}
+-- End --
+
+-- Testcase --
+let calls = [];
+global.system = function(command) { push(calls, command); return 0; };
+let rpc = require('rpcd_mwan4');
+rpc.mwan4.status.call({ args: {} });
+print('mutating commands: ' + length(filter(calls, c => index(c, 'mkdir ') >= 0 || index(c, '/etc/init.d/mwan4 ') >= 0)) + '\n');
+print('mask written: ' + (global.mocklib.read_captured('/var/run/mwan4/mwan4.mmx_mask') != null) + '\n');
+-- End --
+
+-- Expect stdout --
+mutating commands: 0
+mask written: false
+-- End --

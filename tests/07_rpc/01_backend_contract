@@ -124,5 +124,5 @@ advanced restart code: invalidAction
 install feature ok: true
 install feature packages: pbr,luci-app-pbr
 bfd apply ok: true
-calls: env -i ACTION=ifdown INTERFACE='wan' sh /etc/hotplug.d/iface/15-mwan4|nft reset counters inet fw4 >/dev/null 2>&1|apk --allow-untrusted update >/dev/null 2>&1|apk --allow-untrusted add --upgrade 'pbr' 'luci-app-pbr' >/dev/null 2>&1|/etc/init.d/frr reload >/dev/null 2>&1
+calls: env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin ACTION=ifdown INTERFACE='wan' /bin/sh /etc/hotplug.d/iface/15-mwan4|nft reset counters inet fw4 >/dev/null 2>&1|apk --allow-untrusted update >/dev/null 2>&1|apk --allow-untrusted add --upgrade 'pbr' 'luci-app-pbr' >/dev/null 2>&1|/etc/init.d/frr reload >/dev/null 2>&1
 -- End --

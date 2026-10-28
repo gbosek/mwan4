@@ -96,7 +96,7 @@ function add_all_routes() {
 	let active = {};
 	m.uci_foreach('interface', function(s) {
 		let iface = s['.name'];
-		let id = m.get_iface_id(iface);
+		let id = m.get_iface_table_id(iface);
 		if (!id) return;
 		let iface_families = m.get_families(iface);
 		for (let fam in iface_families) {
@@ -113,13 +113,13 @@ function add_all_routes() {
 		let tid = m.route_line_dev(route_line, family);
 		if (tid != null && active[tid]) {
 			// Route maps to a known device table
-			system(sprintf('%s route add table %d %s 2>/dev/null', ip, tid, route_line));
+			system(sprintf('%s route replace table %d %s 2>/dev/null', ip, tid, route_line));
 		} else if (!match(route_line, /^default/) && !match(route_line, /^fe80::\/64/)) {
 			// Non-default route: add to all active tables
 			for (let id in active) {
-				let err = m.cmd_lines(sprintf('%s route add table %s %s 2>&1', ip, id, route_line));
+				let err = m.cmd_lines(sprintf('%s route replace table %s %s 2>&1', ip, id, route_line));
 				if (length(err))
-					m.LOG('warn', 'failed to add', route_line, 'to table', id, '-', join(' ', err));
+					m.LOG('warn', 'failed to synchronize', route_line, 'to table', id, '-', join(' ', err));
 			}
 		}
 	}
@@ -204,7 +204,7 @@ function handle_route(raw_line) {
 		// Non-default, non-link-local: apply to all matching interface tables
 		m.uci_foreach('interface', function(s) {
 			let iface = s['.name'];
-			let id = m.get_iface_id(iface);
+			let id = m.get_iface_table_id(iface);
 			if (!id) return;
 			let fams = m.get_families(iface);
 			for (let f in fams) {

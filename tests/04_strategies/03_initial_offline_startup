@@ -37,6 +37,10 @@ Testing init-time ifup keeps an initially offline interface out of strategies un
 }
 -- End --
 
+-- File ubus/network.interface.wan_4~status.json --
+{"up":false}
+-- End --
+
 -- Testcase --
 import m from 'mwan4';
 
